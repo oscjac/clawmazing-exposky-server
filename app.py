@@ -87,15 +87,6 @@ class SolarSystem:
     def __repr__(self):
         return (f"SolarSystem(name={self.name}, radius={self.radius}, starMass={self.starMass}, "
                 f"allExo={self.allExo}, numPlanets={self.numPlanets})")
-    
-    def to_dict():
-        return {
-        'name': name,
-        'radius': radius,
-        'starMass': starMass,
-        'allExo': [solar_sys_expo_to_dict(exo) for exo in allExo],
-        'numPlanets': numPlanets
-    }
 
 class Solar_Sys_Expo:
     def __init__(self, name, radius, period, home_star, star_temp_eff, dist_from_star, orb_speed):
@@ -178,7 +169,14 @@ for Item in Exo_List:
 # print(allSolarSystems)
 
 
-
+def solar_system_to_dict(solar_system):
+    return {
+        'name': solar_system.name,
+        'radius': solar_system.radius,
+        'starMass': solar_system.starMass,
+        'allExo': [solar_sys_expo_to_dict(exo) for exo in solar_system.allExo],
+        'numPlanets': solar_system.numPlanets
+    }
 
 def solar_sys_expo_to_dict(exo):
     return {
@@ -189,9 +187,31 @@ def solar_sys_expo_to_dict(exo):
         'dist_from_star': exo.dist_from_star
     }
 
-solar_systems_dict = {key: value.to_dict() for key, value in allSolarSystems.items()}
+
+def habitable_exo_to_dict(exo):
+    return {
+        'name': exo.name,
+        'type': exo.type,
+        'detection_method': exo.detection_method,
+        'mass': exo.mass,
+        'radius': exo.radius,
+        'flux': exo.flux,
+        'Tsurf': exo.Tsurf,
+        'period': exo.period,
+        'edistance': exo.edistance,
+        'age': exo.age,
+        'ESI': exo.ESI
+    }
+
+solar_systems_dict = {key: solar_system_to_dict(value) for key, value in allSolarSystems.items()}
+habitable_worlds_dict = {key: habitable_exo_to_dict(value) for key, value in Habitable_List.items()}
 
 # Convert to JSON
 json_output = json.dumps(solar_systems_dict, indent=4)
 with open('solar_systems.json', 'w') as json_file:
+    json_file.write(json_output)
+
+
+json_output = json.dumps(habitable_worlds_dict, indent=4)
+with open('habitable_worlds.json', 'w') as json_file:
     json_file.write(json_output)
