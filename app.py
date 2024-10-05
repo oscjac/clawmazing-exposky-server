@@ -1,6 +1,7 @@
 import csv
 import pandas as pd
 import numpy as np
+import json
 
 # Define the ExoPlanet class
 #  	Name	Type	Detection Method	Mass
@@ -58,8 +59,8 @@ G = 6.67*10**(-11)
 M = 1.989*10**(30)
 # Solar luminosity
 L = 3.826*10**(26)
-# Solar radius
-r = 6.9599*10**8
+# Solar radius, in earth masses
+r = 6.9599*(10**8) / 6378137
 # Boltzmann constant (the little k used in the distance fo)
 k = 1.380649*10**(-23)
 # Define the ExoPlanet class
@@ -86,6 +87,15 @@ class SolarSystem:
     def __repr__(self):
         return (f"SolarSystem(name={self.name}, radius={self.radius}, starMass={self.starMass}, "
                 f"allExo={self.allExo}, numPlanets={self.numPlanets})")
+    
+    def to_dict():
+        return {
+        'name': name,
+        'radius': radius,
+        'starMass': starMass,
+        'allExo': [solar_sys_expo_to_dict(exo) for exo in allExo],
+        'numPlanets': numPlanets
+    }
 
 class Solar_Sys_Expo:
     def __init__(self, name, radius, period, home_star, star_temp_eff, dist_from_star, orb_speed):
@@ -111,7 +121,7 @@ Exo_List = []
 merged_df = df.groupby(['pl_name', 'hostname']).agg(
     pl_rade=('pl_rade', lambda x: np.nanmean(x)), 
     pl_masse=('pl_masse', lambda x: np.nanmean(x)),
-    pl_orbincl=('pl_orbincl', lambda x: np.nanmean(x)),
+    pl_orbper=('pl_orbper', lambda x: np.nanmean(x)),
     st_teff=('st_teff', lambda x: np.nanmean(x))
 ).reset_index()
 
@@ -121,16 +131,15 @@ for index, row in merged_df.iterrows():
     hostname = data['hostname']
     pl_rade = data['pl_rade']
     pl_masse = data['pl_masse']
-    pl_orbincl = data['pl_orbincl']
+    pl_orbper = data['pl_orbper']
     st_teff = data['st_teff']
-    Exo_List.append(Solar_Sys_Expo(pl_name, pl_rade, pl_orbincl, hostname, st_teff, 0, 0))
+    Exo_List.append(Solar_Sys_Expo(pl_name, pl_rade, pl_orbper, hostname, st_teff, 0, 0))
 
 allSolarSystems = {}
 # Iterate through list of exoplanets, putting exoplanets that have the necessary data 
 # into a hash table for a particular solar system. Delete if null period, delete when moved
 # AND calculating the distance from the star for each planet based on period
 for Item in Exo_List:
-    print(Item.period)
     if Item.period == 0:
         if Item.name in Habitable_List:
             del Habitable_List[Item.name]
@@ -150,7 +159,7 @@ for Item in Exo_List:
                 radius = rad_G
                 starMass = mass_G
             Item.dist_from_star = (G * starMass * (Item.period**2) / (4 * np.pi**2)) ** (1/3)
-            Item.orb_speed = 2 * np.pi * Item.dist_from_star * Item.period
+            Item.orb_speed = 2 * np.pi * Item.dist_from_star / (Item.period*86400)
             allExo = [Item] 
             numPlanets=1
             tempSolar=SolarSystem(starName, radius, starMass, allExo, numPlanets)
@@ -161,22 +170,15 @@ for Item in Exo_List:
             #use mass to calculate dist_from_star here in m
             Item.dist_from_star = (G * currentStarMass * Item.period**2 / (4 * np.pi**2)) ** (1/3)
             #use (something) to calculate orbital speed
-            Item.orb_speed = 2 * np.pi * Item.dist_from_star * Item.period
+            Item.orb_speed = 2 * np.pi * Item.dist_from_star / (Item.period*86400)
             allSolarSystems[starName].allExo.append(Item)
             allSolarSystems[starName].numPlanets+=1
 
 
-print(allSolarSystems)
+# print(allSolarSystems)
 
 
-def solar_system_to_dict(solar_system):
-    return {
-        'name': solar_system.name,
-        'radius': solar_system.radius,
-        'starMass': solar_system.starMass,
-        'allExo': [solar_sys_expo_to_dict(exo) for exo in solar_system.allExo],
-        'numPlanets': solar_system.numPlanets
-    }
+
 
 def solar_sys_expo_to_dict(exo):
     return {
@@ -186,3 +188,10 @@ def solar_sys_expo_to_dict(exo):
         'home_star': exo.home_star,
         'dist_from_star': exo.dist_from_star
     }
+
+solar_systems_dict = {key: value.to_dict() for key, value in allSolarSystems.items()}
+
+# Convert to JSON
+json_output = json.dumps(solar_systems_dict, indent=4)
+with open('solar_systems.json', 'w') as json_file:
+    json_file.write(json_output)
