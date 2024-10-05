@@ -5,7 +5,8 @@ import numpy as np
 # Define the ExoPlanet class
 #  	Name	Type	Detection Method	Mass
 class ExoPlanet:
-    def __init__(self, type, detection_method, mass, radius, flux, Tsurf, period, edistance, age, ESI):
+    def __init__(self, name, type, detection_method, mass, radius, flux, Tsurf, period, edistance, age, ESI):
+        self.name = name
         self.type = type
         self.detection_method = detection_method
         self.mass = mass
@@ -16,12 +17,7 @@ class ExoPlanet:
         self.edistance = edistance
         self.age = age
         self.ESI = ESI
-        
-        
-    
-    def __repr__(self):
-        return (f"ExoPlanet(name={self.name}, star_name={self.star_name}, "
-                f"mass={self.mass}, radius={self.radius}, distance={self.distance}, discovery_year={self.discovery_year})")
+
 
 # Define a hash table where the key is the solar system name and value is a list of ExoPlanet objects
 Habitable_List = {}
@@ -128,22 +124,17 @@ for index, row in merged_df.iterrows():
     pl_orbincl = data['pl_orbincl']
     st_teff = data['st_teff']
     Exo_List.append(Solar_Sys_Expo(pl_name, pl_rade, pl_orbincl, hostname, st_teff, 0, 0))
-    
-        
 
-
-
-
-allSolarSystems = []
+allSolarSystems = {}
 # Iterate through list of exoplanets, putting exoplanets that have the necessary data 
 # into a hash table for a particular solar system. Delete if null period, delete when moved
 # AND calculating the distance from the star for each planet based on period
-while Exo_List:
-    Item = Exo_List.pop()
+for Item in Exo_List:
+    print(Item.period)
     if Item.period == 0:
         if Item.name in Habitable_List:
-            Habitable_List.remove(Item.name)
-        break
+            del Habitable_List[Item.name]
+        continue
     else:
         # If the solar system hasn't yet been pushed into hashtable
         if Item.home_star not in allSolarSystems:
@@ -154,23 +145,44 @@ while Exo_List:
                 starMass = mass_M
             elif Item.star_temp_eff <= 5240:
                 radius = rad_K
-                starmass = mass_K
+                starMass = mass_K
             else:
                 radius = rad_G
-                starmass = mass_G
-            Item.dist_from_star = (G * starmass * Item.period**2 / (4 * np.pi()**2)) ** (1/3)
-            Item.orb_speed = 2 * np.pi() * Item.dist_from_star * Item.period
+                starMass = mass_G
+            Item.dist_from_star = (G * starMass * (Item.period**2) / (4 * np.pi**2)) ** (1/3)
+            Item.orb_speed = 2 * np.pi * Item.dist_from_star * Item.period
             allExo = [Item] 
             numPlanets=1
-            tempSolar=SolarSystem(starName, radius, allExo, numPlanets)
+            tempSolar=SolarSystem(starName, radius, starMass, allExo, numPlanets)
             allSolarSystems[starName]= tempSolar
             
-        
         else:
             currentStarMass=allSolarSystems[starName].starMass
             #use mass to calculate dist_from_star here in m
-            Item.dist_from_star = (G * currentStarMass * Item.period**2 / (4 * np.pi()**2)) ** (1/3)
+            Item.dist_from_star = (G * currentStarMass * Item.period**2 / (4 * np.pi**2)) ** (1/3)
             #use (something) to calculate orbital speed
-            Item.orb_speed = 2 * np.pi() * Item.dist_from_star * Item.period
+            Item.orb_speed = 2 * np.pi * Item.dist_from_star * Item.period
             allSolarSystems[starName].allExo.append(Item)
             allSolarSystems[starName].numPlanets+=1
+
+
+print(allSolarSystems)
+
+
+def solar_system_to_dict(solar_system):
+    return {
+        'name': solar_system.name,
+        'radius': solar_system.radius,
+        'starMass': solar_system.starMass,
+        'allExo': [solar_sys_expo_to_dict(exo) for exo in solar_system.allExo],
+        'numPlanets': solar_system.numPlanets
+    }
+
+def solar_sys_expo_to_dict(exo):
+    return {
+        'name': exo.name,
+        'radius': exo.radius,
+        'period': exo.period,
+        'home_star': exo.home_star,
+        'dist_from_star': exo.dist_from_star
+    }
