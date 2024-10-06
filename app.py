@@ -194,7 +194,8 @@ def solar_sys_expo_to_dict(exo):
         'radius': exo.radius,
         'period': exo.period,
         'home_star': exo.home_star,
-        'dist_from_star': exo.dist_from_star
+        'dist_from_star': exo.dist_from_star,
+        'is_habitable': exo.is_habitable
     }
 
 
