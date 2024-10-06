@@ -44,11 +44,11 @@ with open('hwc_table_all.csv', 'r') as file:
         edistance = float(row[8])
         age = row[9]
         ESI = float(row[10])
-        found = False
+        found = 0
         
         
         # Create an ExoPlanet object
-        current = ExoPlanet(name, type, detection_method, mass, radius, flux, Tsurf, period, edistance, age, ESI)
+        current = ExoPlanet(name, type, detection_method, mass, radius, flux, Tsurf, period, edistance, age, ESI, found)
         
         # Store the exoplanet in the Exo_List hash table using the name as the key
         if name not in Habitable_List:
@@ -143,7 +143,7 @@ for Item in Exo_List:
         # If the solar system hasn't yet been pushed into hashtable
         if Item.name in Habitable_List:
             Item.is_habitable = 1
-            Habitable_List[name].found=True
+            Habitable_List[name].found=1
         if Item.home_star not in allSolarSystems:
             starName= Item.home_star
             # Set radius and mass based on temperature (spectral type)
@@ -173,10 +173,10 @@ for Item in Exo_List:
             allSolarSystems[starName].numPlanets+=1
 
 
-for Item in Habitable_List:
-    if Item.found == False:
-        del Habitable_List[Item.name]
-# print(allSolarSystems)
+keys = list(Habitable_List.keys())  # Create a copy of the keys
+i = 0  # Initialize index for while loop
+
+
 
 
 def solar_system_to_dict(solar_system):
@@ -210,10 +210,30 @@ def habitable_exo_to_dict(exo):
         'period': exo.period,
         'edistance': exo.edistance,
         'age': exo.age,
-        'ESI': exo.ESI
+        'ESI': exo.ESI,
+        'found': exo.found
     }
 
 solar_systems_dict = {key: solar_system_to_dict(value) for key, value in allSolarSystems.items()}
+
+
+
+
+exoplanet_names = []
+
+for star in solar_systems_dict.values():
+    for exoplanet in star["allExo"]:
+        exoplanet_names.append(exoplanet["name"])
+
+while i < len(keys):  # Iterate over the list of keys
+    key = keys[i]
+    if key not in exoplanet_names:
+        del Habitable_List[key]  # Delete key from the original dictionary
+    i += 1  # Move to the next key
+
+
+
+
 habitable_worlds_dict = {key: habitable_exo_to_dict(value) for key, value in Habitable_List.items()}
 
 # Convert to JSON
