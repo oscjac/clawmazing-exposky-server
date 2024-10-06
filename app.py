@@ -6,7 +6,7 @@ import json
 # Define the ExoPlanet class
 #  	Name	Type	Detection Method	Mass
 class ExoPlanet:
-    def __init__(self, name, type, detection_method, mass, radius, flux, Tsurf, period, edistance, age, ESI):
+    def __init__(self, name, type, detection_method, mass, radius, flux, Tsurf, period, edistance, age, ESI, found):
         self.name = name
         self.type = type
         self.detection_method = detection_method
@@ -18,6 +18,7 @@ class ExoPlanet:
         self.edistance = edistance
         self.age = age
         self.ESI = ESI
+        self.found = found
 
 
 # Define a hash table where the key is the solar system name and value is a list of ExoPlanet objects
@@ -43,6 +44,7 @@ with open('hwc_table_all.csv', 'r') as file:
         edistance = float(row[8])
         age = row[9]
         ESI = float(row[10])
+        found = False
         
         
         # Create an ExoPlanet object
@@ -141,6 +143,7 @@ for Item in Exo_List:
         # If the solar system hasn't yet been pushed into hashtable
         if Item.name in Habitable_List:
             Item.is_habitable = 1
+            Habitable_List[name].found=True
         if Item.home_star not in allSolarSystems:
             starName= Item.home_star
             # Set radius and mass based on temperature (spectral type)
@@ -170,6 +173,9 @@ for Item in Exo_List:
             allSolarSystems[starName].numPlanets+=1
 
 
+for Item in Habitable_List:
+    if Item.found == False:
+        del Habitable_List[Item.name]
 # print(allSolarSystems)
 
 
