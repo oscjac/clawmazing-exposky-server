@@ -97,6 +97,7 @@ class Solar_Sys_Expo:
         self.star_temp_eff=star_temp_eff
         self.dist_from_star=dist_from_star
         self.orb_speed = orb_speed
+        self.is_habitable = 0
         
     def __repr__(self):
         return (f"Solar_Sys_Expo(name={self.name}, radius={self.radius}, "
@@ -115,6 +116,7 @@ merged_df = df.groupby(['pl_name', 'hostname']).agg(
     pl_orbper=('pl_orbper', lambda x: np.nanmean(x)),
     st_teff=('st_teff', lambda x: np.nanmean(x))
 ).reset_index()
+
 
 for index, row in merged_df.iterrows():
     data = row.to_dict()  # Convert the row to a dictionary
@@ -137,6 +139,8 @@ for Item in Exo_List:
         continue
     else:
         # If the solar system hasn't yet been pushed into hashtable
+        if Item.name in Habitable_List:
+            Item.is_habitable = 1
         if Item.home_star not in allSolarSystems:
             starName= Item.home_star
             # Set radius and mass based on temperature (spectral type)
